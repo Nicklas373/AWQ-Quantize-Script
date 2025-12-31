@@ -2,7 +2,6 @@
 # Reference: https://github.com/xhedit/quantkit/
 
 import argparse
-import torch
 
 from datasets import load_dataset, Dataset
 from huggingface_hub import snapshot_download

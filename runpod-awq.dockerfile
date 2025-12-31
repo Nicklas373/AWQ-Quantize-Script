@@ -3,7 +3,7 @@ FROM runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404
 
 # Configure image maintainer
 LABEL maintainer="Nicklas373 <herlambangdicky5@gmail.com>"
-LABEL version="1.1.2-PROD"
+LABEL version="1.1.3-PROD"
 LABEL description="Docker container for Runpod, used for LLM Quantization with LLM Compressor (AWQ)"
 
 # Configure environment variables
@@ -41,6 +41,7 @@ RUN uv pip install --no-cache-dir -r /workspace/requirements.txt
 
 # Copy quantization scripts into the container
 COPY quantize.py /workspace/
+COPY upload.py /workspace/
 
 # Set entrypoint and default command
 ENTRYPOINT ["bash", "-c", "set -e; ls; python3 quantize.py --help; sleep infinity"]
