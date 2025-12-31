@@ -1,0 +1,10 @@
+# --extra-index-url https://download.pytorch.org/whl/cu128
+
+# torch==2.8.0
+accelerate
+datasets
+huggingface-hub
+hf-transfer
+mamba-ssm
+llmcompressor
+transformers
