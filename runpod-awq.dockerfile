@@ -39,6 +39,9 @@ COPY requirements.txt /workspace/requirements.txt
 # Install other required Python packages
 RUN uv pip install --no-cache-dir -r /workspace/requirements.txt
 
+# Install VLLM for evaluation benchmark
+RUN uv pip install -U vllm --torch-backend=auto --extra-index-url https://download.pytorch.org/whl/cu128
+
 # Copy quantization scripts into the container
 COPY quantize.py /workspace/
 COPY upload.py /workspace/
