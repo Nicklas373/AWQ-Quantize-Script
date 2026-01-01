@@ -7,8 +7,9 @@ from datasets import load_dataset, Dataset
 from huggingface_hub import snapshot_download
 from llmcompressor import oneshot
 from llmcompressor.modifiers.awq import AWQModifier
+from llmcompressor.modifiers.smoothquant import SmoothQuantModifier
 from pathlib import Path
-from transformers import AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # --------------------------------------------------
 # 1. Download & Prepare Model Directory
@@ -68,8 +69,13 @@ def run_awq_quantization(
     # Disable KV cache (saves VRAM during calibration)
     model.config.use_cache = False
 
-    # Step 3: Prepare Custom Dataset
-    # Step 2: Optional dataset
+    # Prepare tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_path,
+        trust_remote_code=True,
+    )
+
+    # Step 2: Prepare Custom Dataset
     calibration_dataset = None
 
     if dataset_id is not None:
@@ -83,22 +89,27 @@ def run_awq_quantization(
         processed = []
         for row in ds:
             content = row[text_column]
+            
+            # Chat-style dataset (messages)
             if isinstance(content, list):
-                text = " ".join(
-                    m["content"] for m in content if isinstance(m, dict) and "content" in m
+                text = tokenizer.apply_chat_template(
+                    content,
+                    tokenize=False,
+                    add_generation_prompt=False,
                 )
             else:
+                # Plain text dataset
                 text = str(content)
 
             processed.append({"text": text})
 
         calibration_dataset = Dataset.from_list(processed)
     else:
-        print("Using default AWQ calibration dataset")
+        print("Using default AWQ calibration dataset (generic text)")
 
-    # Step 4: Define Recipe (Standard 4-bit AWQ)
-    # W4A16_ASYM is the standard format for vLLM performance
+    # Step 3: Define Recipe (Standard 4-bit AWQ)
     recipe = [
+        SmoothQuantModifier(smoothing_strength=0.8),
         AWQModifier(
             ignore=["lm_head"],
             config_groups={
@@ -116,7 +127,7 @@ def run_awq_quantization(
         )
     ]
 
-    # Step 5: Run Oneshot Quantization
+    # Step 4: Run Oneshot Quantization
     # llm-compressor handles loading the model from the local_path
     output_dir = f"{model_path.name}-AWQ"
 
@@ -143,8 +154,8 @@ def main():
     parser.add_argument("--dataset_id", type=str, default=None, help="The Dataset ID to use as dataset on calibration.")
     parser.add_argument("--dataset_split", type=str, default="train", help=("Which split of the dataset to use for AWQ calibration (e.g. 'train', 'validation'). Ignored if --dataset_id is not provided."))
     parser.add_argument("--text_column", type=str, default=None, help=("Name of the column containing text data in the dataset. Required when --dataset_id is provided. If the column contains a list of messages, their 'content' fields ""will be concatenated"))
-    parser.add_argument("--num_samples", type=int, default=256, help=("Number of samples used for AWQ calibration. More samples can improve accuracy but require more VRAM and time. Typical values: 128 to 512."))
-    parser.add_argument("--max_seq_length", type=int, default=1024, help=("Maximum sequence length (in tokens) used during calibration. Longer sequences improve weight calibration for long-context models but increase VRAM usage."))
+    parser.add_argument("--num_samples", type=int, default=512, help=("Number of samples used for AWQ calibration. More samples can improve accuracy but require more VRAM and time. Typical values: 128 to 512."))
+    parser.add_argument("--max_seq_length", type=int, default=2048, help=("Maximum sequence length (in tokens) used during calibration. Longer sequences improve weight calibration for long-context models but increase VRAM usage."))
     parser.add_argument("--hf_cache", type=bool, default=False, help=( "Whether to use Hugging Face cache symlinks when downloading the model. Enable if you want to reuse cached files; disable for fully local copies."))
     parser.add_argument("--branch", type=str, default="main", help=( "Model repository branch or revision to download from Hugging Face (e.g. 'main', 'fp16', 'bf16')."))
     args = parser.parse_args()
