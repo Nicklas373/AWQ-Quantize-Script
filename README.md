@@ -2,7 +2,7 @@
 
 ## How to use
 
-- Deploy this Docker then Access SSH
+- Deploy this Docker then Access SSH or using VSCode on Runpod with port 8080
 - Exec **quantize.py** with this parameters (Examples)
 
 ```shell
