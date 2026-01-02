@@ -3,7 +3,7 @@ FROM runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404
 
 # Configure image maintainer
 LABEL maintainer="Nicklas373 <herlambangdicky5@gmail.com>"
-LABEL version="1.1.4-PROD"
+LABEL version="1.1.5-PROD"
 LABEL description="Docker container for Runpod, used for LLM Quantization with LLM Compressor (AWQ)"
 
 # Configure environment variables
@@ -13,6 +13,10 @@ ENV TORCH_CUDA_ARCH_LIST="8.6;8.9;9.0;12.0"
 ENV UV_PYTHON_PREFERENCE=only-system
 ENV UV_HTTP_TIMEOUT=1800
 
+# VS Code Server
+ENV PASSWORD=""
+ENV CODE_SERVER_ARGS="--bind-addr 0.0.0.0:8080 --auth none"
+
 # System packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -20,7 +24,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     git-lfs \
     wget \
+    ca-certificates \
+    dumb-init \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
+
+# Install code-server
+RUN curl -fsSL https://code-server.dev/install.sh | sh
 
 # Install uv for python virtual environments
 RUN curl -LsSf https://astral.sh/uv/install.sh | bash
@@ -46,5 +56,9 @@ RUN uv pip install -U vllm --torch-backend=auto --extra-index-url https://downlo
 COPY quantize.py /workspace/
 COPY upload.py /workspace/
 
+# Expose VS Code port
+EXPOSE 8080
+
 # Set entrypoint and default command
-ENTRYPOINT ["bash", "-c", "set -e; ls; python3 quantize.py --help; sleep infinity"]
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["bash", "-c", "code-server $CODE_SERVER_ARGS /workspace & python3 quantize.py --help && sleep infinity"]
