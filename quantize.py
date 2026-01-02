@@ -111,16 +111,21 @@ def run_awq_quantization(
     recipe = [
         SmoothQuantModifier(smoothing_strength=0.8),
         AWQModifier(
-            ignore=["lm_head"],
+            ignore=[
+                "model.embed_tokens",
+                "model.norm",
+                "lm_head",
+            ],
             config_groups={
                 "group_0": {
                     "targets": ["Linear"],
                     "weights": {
                         "num_bits": 4,
                         "type": "int",
-                        "symmetric": False,
+                        "symmetric": True,
                         "strategy": "group",
-                        "group_size": 128,
+                        "group_size": 64,
+                        "observer": "minmax",
                     },
                 }
             }
