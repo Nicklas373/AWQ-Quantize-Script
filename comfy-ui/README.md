@@ -1,0 +1,84 @@
+# ComfyUI - For NVIDIA (Ada Lovelace / Ampere Architecture)
+
+Run the ComfyUI with pre-compiled sage attention for NVIDIA Ada Lovelace architecture (RTX 40xx) and Ampere architecture (RTX 30xx).
+
+First start installs will initialize several extensions (takes a few minutes), then when you see this in the logs, ComfyUI is ready to be used:
+
+```shell
+[ComfyUI-Manager] default cache updated: https://api.comfy.org/nodes⁠
+
+FETCH DATA from: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main/custom-node-list.json⁠ [DONE]
+
+[ComfyUI-Manager] All startup tasks have been completed.
+```
+
+## Access
+
+- 8080: VS Code Server
+- 8083: ComfyUI Web UI
+
+## Pre-installed custom nodes
+
+- [ComfyUI-WanVideoWrapper](https://github.com/kijai/ComfyUI-WanVideoWrapper)
+- [comfyui_controlnet_aux](https://github.com/Fannovel16/comfyui_controlnet_aux)
+- [ComfyUI-GGUF](https://github.com/city96/ComfyUI-GGUF)
+- [ComfyUI-Custom-Scripts](https://github.com/pythongosssss/ComfyUI-Custom-Scripts)
+- [ComfyUI_LayerStyle](https://github.com/chflame163/ComfyUI_LayerStyle)
+- [rgthree-comfy](https://github.com/rgthree/rgthree-comfy)
+- [ComfyUI-Easy-Use](https://github.com/yolain/ComfyUI-Easy-Use)
+- [ComfyUI-KJNodes](https://github.com/kijai/ComfyUI-KJNodes)
+- [ComfyUI-Crystools](https://github.com/crystian/ComfyUI-Crystools)
+- [efficiency-nodes-comfyui](https://github.com/jags111/efficiency-nodes-comfyui)
+- [ComfyUI-VideoHelperSuite](https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite)
+- [ComfyUI_UltimateSDUpscale](https://github.com/ssitu/ComfyUI_UltimateSDUpscale)
+- [ComfyUI-segment-anything-2](https://github.com/kijai/ComfyUI-segment-anything-2)
+- [comfyui-inpaint-nodes](https://github.com/Acly/comfyui-inpaint-nodes)
+- [ComfyUI-TeaCache](https://github.com/welltop-cn/ComfyUI-TeaCache)
+- [ComfyUI_essentials](https://github.com/cubiq/ComfyUI_essentials)
+- [ComfyUI-Advanced-ControlNet](https://github.com/Kosinkadink/ComfyUI-Advanced-ControlNet)
+- [ComfyUI-Frame-Interpolation](https://github.com/Fannovel16/ComfyUI-Frame-Interpolation)
+- [ComfyUI-Detail-Daemon](https://github.com/Jonseed/ComfyUI-Detail-Daemon)
+- [cg-use-everywhere](https://github.com/chrisgoringe/cg-use-everywhere)
+- [Comfyui_TTP_Toolset](https://github.com/TTPlanetPig/Comfyui_TTP_Toolset)
+- [ComfyUI-Inspire-Pack](https://github.com/ltdrdata/ComfyUI-Inspire-Pack)
+- [ComfyUI-MultiGPU](https://github.com/pollockjj/ComfyUI-MultiGPU)
+- [comfyui-tooling-nodes](https://github.com/Acly/comfyui-tooling-nodes)
+- [ComfyUI-GIMM-VFI](https://github.com/kijai/ComfyUI-GIMM-VFI)
+- [ComfyUI-WanVideoStartEndFrames](https://github.com/raindrop313/ComfyUI-WanVideoStartEndFrames)
+- [ComfyUI_smZNodes](https://github.com/shiimizu/ComfyUI_smZNodes)
+- [ComfyUI-Impact-Subpack](https://github.com/ltdrdata/ComfyUI-Impact-Subpack)
+- [ComfyUI-mxToolkit](https://github.com/Smirnov75/ComfyUI-mxToolkit)
+- [ComfyUI-Image-Filters](https://github.com/spacepxl/ComfyUI-Image-Filters)
+- [Comfyui-In-Context-Lora-Utils](https://github.com/lrzjason/Comfyui-In-Context-Lora-Utils)
+- [gguf](https://github.com/calcuis/gguf)
+- [comfyui-various](https://github.com/jamesWalker55/comfyui-various)
+- [ComfyMath](https://github.com/evanspearman/ComfyMath)
+- [ComfyUI-Image-Saver](https://github.com/alexopus/ComfyUI-Image-Saver)
+- [wlsh_nodes](https://github.com/wallish77/wlsh_nodes)
+- [ComfyUI_JPS-Nodes](https://github.com/JPS-GER/ComfyUI_JPS-Nodes)
+- [ComfyUI-Chibi-Nodes](https://github.com/chibiace/ComfyUI-Chibi-Nodes)
+- [ComfyUI-WanStartEndFramesNative](https://github.com/Flow-two/ComfyUI-WanStartEndFramesNative)
+- [ComfyLiterals](https://github.com/M1kep/ComfyLiterals)
+- [ComfyUI-eesahesNodes](https://github.com/EeroHeikkinen/ComfyUI-eesahesNodes)
+- [ComfyUI_Ib_CustomNodes](https://github.com/Chaoses-Ib/ComfyUI_Ib_CustomNodes)
+- [ComfyUI-WanVideoKsampler](https://github.com/ShmuelRonen/ComfyUI-WanVideoKsampler)
+- [ComfyUI_GradientDeepShrink](https://github.com/kinfolk0117/ComfyUI_GradientDeepShrink)
+- [ComfyUI-Logic](https://github.com/theUpsider/ComfyUI-Logic)
+- [ComfyUI-MMAudio](https://github.com/kijai/ComfyUI-MMAudio)
+- [ComfyUI-WanAnimatePreprocess](https://github.com/kijai/ComfyUI-WanAnimatePreprocess)
+- [comfyui-vrgamedevgirl](https://github.com/vrgamegirl19/comfyui-vrgamedevgirl)
+- [ComfyUI-Impact-Pack](https://github.com/ltdrdata/ComfyUI-Impact-Pack)
+- [ComfyUI-SeedVR2_VideoUpscaler](https://github.com/numz/ComfyUI-SeedVR2_VideoUpscaler)
+
+## Directory Structure
+
+- /workspace/ComfyUI: ComfyUI install
+- /workspace/SageAttention: SageAttention Install
+
+## SageAttention Custom Install
+
+- Run this script from VS Code Server
+
+```shell
+    cd SageAttention && python3 setup.py install
+```
