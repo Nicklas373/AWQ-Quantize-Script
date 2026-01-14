@@ -3,7 +3,7 @@ FROM runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404
 
 # Configure image maintainer
 LABEL maintainer="Nicklas373 <herlambangdicky5@gmail.com>"
-LABEL version="1.0.0-PROD"
+LABEL version="1.0.1-PROD"
 LABEL description="Docker container for Runpod, used for Comfy UI"
 
 # Configure environment variables
@@ -63,7 +63,6 @@ ENV MAX_JOBS=
 RUN cd /workspace/ComfyUI/custom_nodes && \
     git clone https://github.com/kijai/ComfyUI-WanVideoWrapper && \
     git clone https://github.com/Comfy-Org/ComfyUI-Manager && \
-    git clone https://github.com/Fannovel16/comfyui_controlnet_aux.git && \
     git clone https://github.com/city96/ComfyUI-GGUF && \
     git clone https://github.com/pythongosssss/ComfyUI-Custom-Scripts && \
     git clone https://github.com/chflame163/ComfyUI_LayerStyle && \
@@ -123,6 +122,9 @@ RUN uv pip uninstall pynvml && uv pip install compel nvidia-ml-py
 
 # Install code-server
 RUN curl -fsSL https://code-server.dev/install.sh | sh
+
+# Copy sage attention init script to workspace
+COPY init-sageattention.sh /workspace/
 
 # Expose VS Code port
 EXPOSE 8080

@@ -82,6 +82,7 @@ python3 upload.py --hf_token XXXX --repo_id YOUR_REPO_NAME --local_dir YOUR_REPO
 - huggingface-hub
 - hf-transfer
 - llmcompressor
+- mamba-ssm
 - transformers
 
 ## Explanation for **quantize.py**

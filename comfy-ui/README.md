@@ -4,6 +4,8 @@ Run the ComfyUI with pre-compiled sage attention for NVIDIA Ada Lovelace archite
 
 First start installs will initialize several extensions (takes a few minutes), then when you see this in the logs, ComfyUI is ready to be used:
 
+ComfyUI Version: 0.8.2
+
 ```shell
 [ComfyUI-Manager] default cache updated: https://api.comfy.org/nodes⁠
 
@@ -20,7 +22,6 @@ FETCH DATA from: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main
 ## Pre-installed custom nodes
 
 - [ComfyUI-WanVideoWrapper](https://github.com/kijai/ComfyUI-WanVideoWrapper)
-- [comfyui_controlnet_aux](https://github.com/Fannovel16/comfyui_controlnet_aux)
 - [ComfyUI-GGUF](https://github.com/city96/ComfyUI-GGUF)
 - [ComfyUI-Custom-Scripts](https://github.com/pythongosssss/ComfyUI-Custom-Scripts)
 - [ComfyUI_LayerStyle](https://github.com/chflame163/ComfyUI_LayerStyle)
@@ -75,10 +76,10 @@ FETCH DATA from: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main
 - /workspace/ComfyUI: ComfyUI install
 - /workspace/SageAttention: SageAttention Install
 
-## SageAttention Custom Install
+## SageAttention Custom Install (For NVIDIA Blackwell Architecture)
 
 - Run this script from VS Code Server
 
 ```shell
-    cd SageAttention && python3 setup.py install
+    bash ./init-sageattention.sh
 ```
