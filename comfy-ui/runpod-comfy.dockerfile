@@ -3,7 +3,7 @@ FROM runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404
 
 # Configure image maintainer
 LABEL maintainer="Nicklas373 <herlambangdicky5@gmail.com>"
-LABEL version="1.0.1-PROD"
+LABEL version="1.0.2-PROD"
 LABEL description="Docker container for Runpod, used for Comfy UI"
 
 # Configure environment variables
@@ -46,9 +46,13 @@ ENV PATH="/workspace/.venv/bin:${PATH}"
 # Clone ComfyUI
 RUN git clone https://github.com/comfyanonymous/ComfyUI -b master ComfyUI
 
+# Copy custom requirements to workspace
+COPY requirements.txt /workspace/
+
 # Install other required Python packages
 RUN uv pip install -r /workspace/ComfyUI/requirements.txt
 RUN uv pip install -r /workspace/ComfyUI/manager_requirements.txt
+RUN uv pip install -r /workspace/requirements.txt
 
 # Install sage attention 2
 RUN git clone https://github.com/thu-ml/SageAttention.git
@@ -123,8 +127,9 @@ RUN uv pip uninstall pynvml && uv pip install compel nvidia-ml-py
 # Install code-server
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 
-# Copy sage attention init script to workspace
+# Copy sage attention and workflow to workspace
 COPY init-sageattention.sh /workspace/
+COPY 1080p_Perfect_Loops_Caravel_LumiNami_v1_1.json /workspace/ComfyUI/user/default/workflows
 
 # Expose VS Code port
 EXPOSE 8080
@@ -134,4 +139,4 @@ EXPOSE 8083
 
 # Set entrypoint and default command
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["bash", "-c", "code-server $CODE_SERVER_ARGS /workspace & python3 ComfyUI/main.py --use-sage-attention --listen 0.0.0.0 --port 8083"]
+CMD ["bash", "-c", "code-server $CODE_SERVER_ARGS /workspace & python3 ComfyUI/main.py --use-sage-attention --listen 0.0.0.0 --port 8083 --reserve-vram 1.0"]

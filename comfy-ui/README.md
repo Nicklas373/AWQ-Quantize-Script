@@ -4,8 +4,6 @@ Run the ComfyUI with pre-compiled sage attention for NVIDIA Ada Lovelace archite
 
 First start installs will initialize several extensions (takes a few minutes), then when you see this in the logs, ComfyUI is ready to be used:
 
-ComfyUI Version: 0.8.2
-
 ```shell
 [ComfyUI-Manager] default cache updated: https://api.comfy.org/nodes⁠
 
@@ -14,10 +12,17 @@ FETCH DATA from: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main
 [ComfyUI-Manager] All startup tasks have been completed.
 ```
 
+Comfy UI 0.9.2
+
 ## Access
 
 - 8080: VS Code Server
 - 8083: ComfyUI Web UI
+
+## Directory Structure
+
+- /workspace/ComfyUI: ComfyUI install
+- /workspace/SageAttention: SageAttention Install
 
 ## Pre-installed custom nodes
 
@@ -71,11 +76,6 @@ FETCH DATA from: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main
 - [ComfyUI-Impact-Pack](https://github.com/ltdrdata/ComfyUI-Impact-Pack)
 - [ComfyUI-SeedVR2_VideoUpscaler](https://github.com/numz/ComfyUI-SeedVR2_VideoUpscaler)
 
-## Directory Structure
-
-- /workspace/ComfyUI: ComfyUI install
-- /workspace/SageAttention: SageAttention Install
-
 ## SageAttention Custom Install (For NVIDIA Blackwell Architecture)
 
 - Run this script from VS Code Server
@@ -83,3 +83,11 @@ FETCH DATA from: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main
 ```shell
     bash ./init-sageattention.sh
 ```
+
+## What's New
+
+- 1.0.2 (2025-01-19)
+  - Add new comfy-ui flags --reserve-vram 1.0 to reserve VRAM at least 1.0 GB
+  - Add customized workflows from [@LumiNami](https://civitai.com/user/LumiNami)
+  - ComfyUI Version [0.9.2](https://github.com/Comfy-Org/ComfyUI/commit/1a72bf20469dee31ad156f819c14f0172cbad222)
+  - Pre-installed python modules huggingface-hub & hf-transfer
