@@ -41,7 +41,7 @@ AWQModifier(
 - Exec **quantize.py** with this parameters (Examples)
 
 ```shell
-python3 quantize.py --model_id HUGGINGFACE/HUGGINGFACE_MODEL --dataset_id DATASET/YOUR_DATASET --dataset_split train --text_column messages --num_samples 512 --max_seq_length 1024 --hf_cache False --branch main
+python3 quantize.py --model_id HUGGINGFACE/HUGGINGFACE_MODEL --dataset_id DATASET/YOUR_DATASET --dataset_split train --text_column messages --num_samples 512 --max_seq_length 1024 --hf_cache False --branch main --trust_remote_code False --trust_remote_code_model False
 ```
 
 - After quantization complete, then run **upload.py** to upload to HF as repo model
@@ -57,7 +57,7 @@ python3 upload.py --hf_token XXXX --repo_id YOUR_REPO_NAME --local_dir YOUR_REPO
 - Exec **quantize.py** with this parameters (Examples)
 
 ```shell
-python3 quantize.py --model_id HUGGINGFACE/HUGGINGFACE_MODEL --dataset_id DATASET/YOUR_DATASET --dataset_split train --text_column messages --num_samples 512 --max_seq_length 1024 --hf_cache False --branch main
+python3 quantize.py --model_id HUGGINGFACE/HUGGINGFACE_MODEL --dataset_id DATASET/YOUR_DATASET --dataset_split train --text_column messages --num_samples 512 --max_seq_length 1024 --hf_cache False --branch main --trust_remote_code False --trust_remote_code_model False
 ```
 
 - After quantization complete, then run **upload.py** to upload to HF as repo model
@@ -78,6 +78,7 @@ python3 upload.py --hf_token XXXX --repo_id YOUR_REPO_NAME --local_dir YOUR_REPO
 ## Python package requirements
 
 - accelerate
+- causal-conv1d
 - datasets
 - huggingface-hub
 - hf-transfer
@@ -93,6 +94,8 @@ python3 upload.py --hf_token XXXX --repo_id YOUR_REPO_NAME --local_dir YOUR_REPO
 - **text_column**: Name of the column containing text data in the dataset. Required when --dataset_id is provided. If the column contains a list of messages, their 'content' fields ""will be concatenated"
 - **num_samples**: Number of samples used for AWQ calibration. More samples can improve accuracy but require more VRAM and time. Typical values: 128 to 512
 - **max_seq_length**: Maximum sequence length (in tokens) used during calibration. Longer sequences improve weight calibration for long-context models but increase VRAM usage
+- **trust_remote_code**: Whether to trust and execute custom model code from the Hugging Face repository. Required for many community models.
+- **trust_remote_code_model**: Whether to trust and execute custom model code when loading the model. Required for many community models.
 
 ## Explanation for **upload.py**
 

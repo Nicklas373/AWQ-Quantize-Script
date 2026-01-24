@@ -3,7 +3,7 @@ FROM runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404
 
 # Configure image maintainer
 LABEL maintainer="Nicklas373 <herlambangdicky5@gmail.com>"
-LABEL version="1.1.5-PROD"
+LABEL version="1.1.6-PROD"
 LABEL description="Docker container for Runpod, used for LLM Quantization with LLM Compressor (AWQ)"
 
 # Configure environment variables

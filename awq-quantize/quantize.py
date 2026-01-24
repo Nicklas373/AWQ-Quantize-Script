@@ -53,6 +53,8 @@ def run_awq_quantization(
         num_samples: int,
         model_id: str,
         text_column: str,
+        trust_remote_code: bool,
+        trust_remote_code_model: bool,
 ):
     # Step 1: Download/Verify local model
     model_path = get_model_path(branch, False, hf_cache, model_id)
@@ -144,6 +146,8 @@ def run_awq_quantization(
         num_calibration_samples=(len(calibration_dataset) if calibration_dataset else None),
         max_seq_length=max_seq_length,
         output_dir=output_dir,
+        trust_remote_code=trust_remote_code,
+        trust_remote_code_model=trust_remote_code_model,
     )
 
     print(f"Success! Quantized model saved to {output_dir}")
@@ -163,6 +167,8 @@ def main():
     parser.add_argument("--max_seq_length", type=int, default=2048, help=("Maximum sequence length (in tokens) used during calibration. Longer sequences improve weight calibration for long-context models but increase VRAM usage."))
     parser.add_argument("--hf_cache", type=bool, default=False, help=( "Whether to use Hugging Face cache symlinks when downloading the model. Enable if you want to reuse cached files; disable for fully local copies."))
     parser.add_argument("--branch", type=str, default="main", help=( "Model repository branch or revision to download from Hugging Face (e.g. 'main', 'fp16', 'bf16')."))
+    parser.add_argument("--trust_remote_code", type=bool, default=False, help=("Whether to trust and execute custom model code from the Hugging Face repository. Required for many community models."))
+    parser.add_argument("--trust_remote_code_model", type=bool, default=False, help=("Whether to trust and execute custom model code when loading the model. Required for many community models."))
     args = parser.parse_args()
 
     run_awq_quantization(
@@ -174,6 +180,8 @@ def main():
         model_id=args.model_id,
         num_samples=args.num_samples,
         text_column=args.text_column,
+        trust_remote_code=args.trust_remote_code,
+        trust_remote_code_model=args.trust_remote_code_model,
      )
 
 # Example Usage
