@@ -2,14 +2,21 @@
 # Reference: https://github.com/xhedit/quantkit/
 
 import argparse
+from pathlib import Path
 
 from datasets import load_dataset, Dataset
 from huggingface_hub import snapshot_download
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
 from llmcompressor import oneshot
 from llmcompressor.modifiers.awq import AWQModifier
 from llmcompressor.modifiers.smoothquant import SmoothQuantModifier
-from pathlib import Path
-from transformers import AutoModelForCausalLM, AutoTokenizer
+
+# --------------------------------------------------
+# Nemotron identifier
+# --------------------------------------------------
+def is_nemotron_model(model_id: str) -> bool:
+    return "nemotron" in model_id.lower()
 
 # --------------------------------------------------
 # 1. Download & Prepare Model Directory
@@ -22,12 +29,9 @@ def get_model_path(
 ):
     path = Path(model_id)
 
-    # If it's already a local directory with a config, return it
     if path.is_dir() and (path / "config.json").is_file():
         return path
 
-    # Otherwise, download from Hugging Face
-    # Standard repo_id format is "owner/repo"
     folder_name = model_id.split("/")[-1]
     local_path = Path(folder_name)
 
@@ -63,19 +67,24 @@ def run_awq_quantization(
     print(f"Loading model from {model_path}...")
     model = AutoModelForCausalLM.from_pretrained(
         model_path,
-        trust_remote_code=True,
-        dtype="auto", # Use the model's native precision (usually BF16/FP16)
-        device_map="auto"   # Efficiently balance across GPUs if available
+        trust_remote_code=trust_remote_code,
+        dtype="auto",
+        device_map="auto"
     )
 
     # Disable KV cache (saves VRAM during calibration)
     model.config.use_cache = False
+    model.eval()
 
     # Prepare tokenizer
     tokenizer = AutoTokenizer.from_pretrained(
         model_path,
-        trust_remote_code=True,
+        trust_remote_code=trust_remote_code,
     )
+
+    # Ensure pad token exists (important for batching)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
 
     # Step 2: Prepare Custom Dataset
     calibration_dataset = None
@@ -110,29 +119,88 @@ def run_awq_quantization(
         print("Using default AWQ calibration dataset (generic text)")
 
     # Step 3: Define Recipe (Standard 4-bit AWQ)
-    recipe = [
-        SmoothQuantModifier(smoothing_strength=0.8),
-        AWQModifier(
-            ignore=[
-                "model.embed_tokens",
-                "model.norm",
-                "lm_head",
-            ],
-            config_groups={
-                "group_0": {
-                    "targets": ["Linear"],
-                    "weights": {
-                        "num_bits": 4,
-                        "type": "int",
-                        "symmetric": True,
-                        "strategy": "group",
-                        "group_size": 64,
-                        "observer": "minmax",
-                    },
+    if is_nemotron_model(model_id):
+        print("Detected Nemotron model → using Nemotron AWQ recipe")
+
+        recipe = [
+            # SmoothQuant (critical for Nemotron)
+            SmoothQuantModifier(
+                smoothing_strength=0.8,
+                mappings=[
+                    [
+                        "re:model\\.backbone\\.layers\\.\\d+\\.norm$",
+                        [
+                            "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.q_proj$",
+                            "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.k_proj$",
+                            "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.v_proj$",
+                        ],
+                    ],
+                    [
+                        "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.v_proj$",
+                        [
+                            "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.o_proj$",
+                        ],
+                    ],
+                    [
+                        "re:model\\.backbone\\.layers\\.\\d+\\.norm$",
+                        [
+                            "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.up_proj$",
+                        ],
+                    ],
+                    [
+                        "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.up_proj$",
+                        [
+                            "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.down_proj$",
+                        ],
+                    ],
+                ],
+            ),
+            AWQModifier(
+                ignore=[
+                    "model.embed_tokens",
+                    "model.norm",
+                    "lm_head",
+                ],
+                config_groups={
+                    "group_0": {
+                        "targets": ["Linear"],
+                        "weights": {
+                            "num_bits": 4,
+                            "type": "int",
+                            "symmetric": True,
+                            "strategy": "group",
+                            "group_size": 64,
+                            "observer": "minmax",
+                        },
+                    }
+                },
+            ),
+        ]
+    else:
+        print("Using generic AWQ recipe")
+        recipe = [
+            SmoothQuantModifier(smoothing_strength=0.8),
+            AWQModifier(
+                ignore=[
+                    "model.embed_tokens",
+                    "model.norm",
+                    "lm_head",
+                ],
+                config_groups={
+                    "group_0": {
+                        "targets": ["Linear"],
+                        "weights": {
+                            "num_bits": 4,
+                            "type": "int",
+                            "symmetric": True,
+                            "strategy": "group",
+                            "group_size": 64,
+                            "observer": "minmax",
+                        },
+                    }
                 }
-            }
-        )
-    ]
+            )
+        ]
 
     # Step 4: Run Oneshot Quantization
     # llm-compressor handles loading the model from the local_path
@@ -146,7 +214,6 @@ def run_awq_quantization(
         num_calibration_samples=(len(calibration_dataset) if calibration_dataset else None),
         max_seq_length=max_seq_length,
         output_dir=output_dir,
-        trust_remote_code=trust_remote_code,
         trust_remote_code_model=trust_remote_code_model,
     )
 

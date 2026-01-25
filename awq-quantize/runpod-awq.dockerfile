@@ -3,15 +3,13 @@ FROM runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404
 
 # Configure image maintainer
 LABEL maintainer="Nicklas373 <herlambangdicky5@gmail.com>"
-LABEL version="1.1.6-PROD"
+LABEL version="1.1.7-PROD"
 LABEL description="Docker container for Runpod, used for LLM Quantization with LLM Compressor (AWQ)"
 
 # Configure environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV TORCH_CUDA_ARCH_LIST="8.6;8.9;9.0;12.0"
-ENV UV_PYTHON_PREFERENCE=only-system
-ENV UV_HTTP_TIMEOUT=1800
 
 # VS Code Server
 ENV PASSWORD=""
@@ -32,22 +30,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install code-server
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 
-# Install uv for python virtual environments
-RUN curl -LsSf https://astral.sh/uv/install.sh | bash
-ENV PATH="/root/.cargo/bin:/root/.local/bin:${PATH}"
-
 # Configure workspace
 WORKDIR /workspace
 
-# Create virtual environment
-RUN uv venv /workspace/.venv
-ENV PATH="/workspace/.venv/bin:${PATH}"
+# Install and upgrade pip, setuptools, and wheel
+RUN python3 -m pip install --upgrade pip setuptools wheel
 
-# Copy requirements file into the container
-COPY requirements.txt /workspace/requirements.txt
+# Debug Torch Version
+RUN python3 - <<EOF
+import torch
+print("Torch version:", torch.__version__)
+EOF
 
-# Install other required Python packages
-RUN uv pip install --no-cache-dir -r /workspace/requirements.txt
+# Install specific Nvidia Nemotron packages
+RUN pip install causal-conv1d==1.6.0 mamba-ssm==2.3.0 --no-build-isolation --no-cache-dir -v
+
+# Install Python dependencies
+RUN pip install accelerate datasets huggingface-hub hf-transfer llmcompressor transformers
 
 # Copy quantization scripts into the container
 COPY quantize.py /workspace/

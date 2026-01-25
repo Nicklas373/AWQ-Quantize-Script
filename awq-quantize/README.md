@@ -30,6 +30,65 @@ AWQModifier(
 )
 ```
 
+## Alternate Nemotron Recipe
+
+```shell
+recipe = [
+    # SmoothQuant (critical for Nemotron)
+    SmoothQuantModifier(
+        smoothing_strength=0.8,
+        mappings=[
+            [
+                "re:model\\.backbone\\.layers\\.\\d+\\.norm$",
+                [
+                    "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.q_proj$",
+                    "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.k_proj$",
+                    "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.v_proj$",
+                ],
+            ],
+            [
+                "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.v_proj$",
+                [
+                    "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.o_proj$",
+                ],
+            ],
+            [
+                "re:model\\.backbone\\.layers\\.\\d+\\.norm$",
+                [
+                    "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.up_proj$",
+                ],
+            ],
+            [
+                "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.up_proj$",
+                [
+                    "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.down_proj$",
+                ],
+            ],
+        ],
+    ),
+    AWQModifier(
+        ignore=[
+            "model.embed_tokens",
+            "model.norm",
+            "lm_head",
+        ],
+        config_groups={
+            "group_0": {
+                "targets": ["Linear"],
+                "weights": {
+                    "num_bits": 4,
+                    "type": "int",
+                    "symmetric": True,
+                    "strategy": "group",
+                    "group_size": 64,
+                    "observer": "minmax",
+                },
+            }
+        },
+    ),
+]
+```
+
 ## Recommended Settings
 
 - **--num_samples** 512

@@ -1,8 +1,0 @@
-accelerate
-causal-conv1d
-datasets
-huggingface-hub
-hf-transfer
-llmcompressor
-mamba-ssm
-transformers
