@@ -3,7 +3,7 @@ FROM runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404
 
 # Configure image maintainer
 LABEL maintainer="Nicklas373 <herlambangdicky5@gmail.com>"
-LABEL version="1.1.7-PROD"
+LABEL version="1.1.9-PROD"
 LABEL description="Docker container for Runpod, used for LLM Quantization with LLM Compressor (AWQ)"
 
 # Configure environment variables
@@ -48,8 +48,18 @@ RUN pip install causal-conv1d==1.6.0 mamba-ssm==2.3.0 --no-build-isolation --no-
 # Install Python dependencies
 RUN pip install accelerate datasets huggingface-hub hf-transfer llmcompressor transformers
 
+# Debug Mamba SSM Version
+RUN python3 - <<EOF
+import mamba_ssm
+from mamba_ssm.ops.selective_scan_interface import selective_scan_fn
+print("Mamba SSM version:", mamba_ssm.__version__)
+print("Selective Scan Function:", selective_scan_fn)
+print("mamba CUDA OK")
+EOF
+
 # Copy quantization scripts into the container
-COPY quantize.py /workspace/
+COPY model_inspect.py /workspace/
+COPY model_quantize.py /workspace/
 COPY upload.py /workspace/
 
 # Expose VS Code port
@@ -57,4 +67,4 @@ EXPOSE 8080
 
 # Set entrypoint and default command
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["bash", "-c", "code-server $CODE_SERVER_ARGS /workspace & python3 quantize.py --help && sleep infinity"]
+CMD ["bash", "-c", "code-server $CODE_SERVER_ARGS /workspace & python3 model_quantize.py --help && sleep infinity"]

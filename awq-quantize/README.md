@@ -2,96 +2,120 @@
 
 Quantize any LLM Models into AWQ 4 Bit format by using LLM Compressor package from [llm-compressor](https://github.com/vllm-project/llm-compressor/tree/main).
 
-For now only for LLM based, Vision Language (VL) will following later.
-
-## Current Recipe
+## Current Recipe for LLM
 
 ```shell
-SmoothQuantModifier(smoothing_strength=0.8),
+SmoothQuantModifier(
+    smoothing_strength=0.8
+),
 AWQModifier(
     ignore=[
-        "model.embed_tokens",
-        "model.norm",
-        "lm_head",
+        "re:.*embed_tokens",
+        "re:.*model.norm",
+        "re:.*input_layernorm$",
+        "re:.*post_attention_layernorm$",
+        "re:.*lm_head",
     ],
+    targets=["Linear"],
     config_groups={
+        "channel_sensitive": {
+            "targets": [
+                're:.*q_proj$',
+                're:.*k_proj$',
+                're:.*v_proj$',
+                're:.*gate_proj$',
+                're:.*up_proj$'
+            ],
+            "weights": {
+                "num_bits": 4,
+                "type": "int",
+                "symmetric": True,
+                "strategy": "channel",
+                "observer": "minmax",
+                "dynamic": False,
+            },
+        },
         "group_0": {
-            "targets": ["Linear"],
+            "targets": ["re:.*down_proj$"],
             "weights": {
                 "num_bits": 4,
                 "type": "int",
                 "symmetric": True,
                 "strategy": "group",
-                "group_size": 64,
-                "observer": "minmax",
+                "group_size": 32,
+                "observer": "mse",
+                "dynamic": False,
             },
         }
-    }
+    },
+    mappings=[
+        {
+            "smooth_layer": r"re:.*up_proj$",
+            "balance_layers": [r"re:.*down_proj$"],
+        },
+    ],
 )
 ```
 
-## Alternate Nemotron Recipe
+## Current Recipe for VLM
 
 ```shell
-recipe = [
-    # SmoothQuant (critical for Nemotron)
-    SmoothQuantModifier(
-        smoothing_strength=0.8,
-        mappings=[
-            [
-                "re:model\\.backbone\\.layers\\.\\d+\\.norm$",
-                [
-                    "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.q_proj$",
-                    "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.k_proj$",
-                    "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.v_proj$",
-                ],
+AWQModifier(
+    ignore=[
+        "re:.*embed_tokens",
+        "re:.*model.norm",
+        "re:.*input_layernorm$",
+        "re:.*post_attention_layernorm$",
+        "re:.*lm_head",
+        "re:.*vision_tower.*",
+        "re:.*vision_encoder.*",
+        "re:.*multi_modal_projector.*",
+        "re:model[.]visual.*",
+    ],
+    targets=["Linear"],
+    config_groups={
+        "channel_sensitive": {
+            "targets": [
+                're:.*q_proj$',
+                're:.*k_proj$',
+                're:.*v_proj$',
+                're:.*gate_proj$',
+                're:.*up_proj$'
             ],
-            [
-                "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.v_proj$",
-                [
-                    "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.o_proj$",
-                ],
-            ],
-            [
-                "re:model\\.backbone\\.layers\\.\\d+\\.norm$",
-                [
-                    "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.up_proj$",
-                ],
-            ],
-            [
-                "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.up_proj$",
-                [
-                    "re:model\\.backbone\\.layers\\.\\d+\\.mixer\\.down_proj$",
-                ],
-            ],
-        ],
-    ),
-    AWQModifier(
-        ignore=[
-            "model.embed_tokens",
-            "model.norm",
-            "lm_head",
-        ],
-        config_groups={
-            "group_0": {
-                "targets": ["Linear"],
-                "weights": {
-                    "num_bits": 4,
-                    "type": "int",
-                    "symmetric": True,
-                    "strategy": "group",
-                    "group_size": 64,
-                    "observer": "minmax",
-                },
-            }
+            "weights": {
+                "num_bits": 4,
+                "type": "int",
+                "symmetric": True,
+                "strategy": "channel",
+                "observer": "minmax",
+                "dynamic": False,
+            },
         },
-    ),
-]
+        "group_0": {
+            "targets": ["re:.*down_proj$"],
+            "weights": {
+                "num_bits": 4,
+                "type": "int",
+                "symmetric": True,
+                "strategy": "group",
+                "group_size": 32,
+                "observer": "mse",
+                "dynamic": False,
+            },
+        }
+    },
+    mappings=[
+        {
+            "smooth_layer": r"re:.*up_proj$",
+            "balance_layers": [r"re:.*down_proj$"],
+        },
+    ],
+)
 ```
 
 ## Recommended Settings
 
-- **--num_samples** 512
+- **--num_samples** 256 or 512
 - **--max_seq_length** 1024 or 2048 (More length, will took longer time)
 
 ## How to use
@@ -100,7 +124,7 @@ recipe = [
 - Exec **quantize.py** with this parameters (Examples)
 
 ```shell
-python3 quantize.py --model_id HUGGINGFACE/HUGGINGFACE_MODEL --dataset_id DATASET/YOUR_DATASET --dataset_split train --text_column messages --num_samples 512 --max_seq_length 1024 --hf_cache False --branch main --trust_remote_code False --trust_remote_code_model False
+python model_quantize.py --model_id "HUGGINGFACE/HUGGINGFACE_MODEL" --dataset_id DATASET1/YOUR_DATASET_1,DATASET2/YOUR_DATASET_2 --dataset_mix 0.5,0.5 --dataset_split train --text_column messages --num_samples 256 --max_seq_length 1024 --hf_cache False --branch main --trust_remote_code False --trust_remote_code_model False
 ```
 
 - After quantization complete, then run **upload.py** to upload to HF as repo model
@@ -116,7 +140,7 @@ python3 upload.py --hf_token XXXX --repo_id YOUR_REPO_NAME --local_dir YOUR_REPO
 - Exec **quantize.py** with this parameters (Examples)
 
 ```shell
-python3 quantize.py --model_id HUGGINGFACE/HUGGINGFACE_MODEL --dataset_id DATASET/YOUR_DATASET --dataset_split train --text_column messages --num_samples 512 --max_seq_length 1024 --hf_cache False --branch main --trust_remote_code False --trust_remote_code_model False
+python model_quantize.py --model_id "HUGGINGFACE/HUGGINGFACE_MODEL" --dataset_id DATASET1/YOUR_DATASET_1,DATASET2/YOUR_DATASET_2 --dataset_mix 0.5,0.5 --dataset_split train --text_column messages --num_samples 256 --max_seq_length 1024 --hf_cache False --branch main --trust_remote_code False --trust_remote_code_model False
 ```
 
 - After quantization complete, then run **upload.py** to upload to HF as repo model
@@ -131,7 +155,8 @@ python3 upload.py --hf_token XXXX --repo_id YOUR_REPO_NAME --local_dir YOUR_REPO
 
 ## Directory Structure
 
-- /workspace/quantize.py: Python based quantization script
+- /workspace/model_inspect.py: Python based model tree inspect script
+- /workspace/model_quantize.py: Python based quantization script
 - /workspace/upload.py: Python based upload to HF script
 
 ## Python package requirements
@@ -148,7 +173,9 @@ python3 upload.py --hf_token XXXX --repo_id YOUR_REPO_NAME --local_dir YOUR_REPO
 ## Explanation for **quantize.py**
 
 - **model_id**: HuggingFace Model Name (Required)
-- **dataset_id**: HuggingFace Dataset ID (Required)
+- **dataset_id**: HuggingFace Dataset ID (Required), can have multiple datasets with comma-separated ratios, e.g. xyz/xx1,xyz/xx2
+- **dataset_config**: Dataset configuration name (if applicable).
+- **dataset_mix**: Combine multiple datasets with comma-separated ratios, e.g. 0.7,0.3
 - **dataset_split**: Split of the dataset to use for calibration (e.g. 'train', 'validation'). Ignored if --dataset_id is not provided
 - **text_column**: Name of the column containing text data in the dataset. Required when --dataset_id is provided. If the column contains a list of messages, their 'content' fields ""will be concatenated"
 - **num_samples**: Number of samples used for AWQ calibration. More samples can improve accuracy but require more VRAM and time. Typical values: 128 to 512
